@@ -19,6 +19,7 @@ var http = require('http')
   , util = require('util')
   , stream = require('stream')
   , qs = require('querystring')
+  , uncompress = require('compress-buffer').uncompress
   , mimetypes = require('./mimetypes')
   ;
 
@@ -306,20 +307,27 @@ Request.prototype.request = function () {
         if (options.onResponse) {
           options.onResponse(null, response)
         }
+
         if (options.callback) {
           var buffer = []
           var bodyLen = 0
-          options.on("data", function (chunk) { 
+          var autoUncompress = options.autoUncompress && ('gzip' === response.headers['content-encoding']);
+
+          options.on("data", function (chunk) {
             buffer.push(chunk)
             bodyLen += chunk.length
           })
-          options.on("end", function () { 
+          options.on("end", function () {
             var body = new Buffer(bodyLen)
             var i = 0
             buffer.forEach(function (chunk) {
               chunk.copy(body, i, 0, chunk.length)
               i += chunk.length
             })
+
+            if (autoUncompress)
+              body = uncompress(body);
+
             response.body = body.toString()
             if (options.json) {
               try {

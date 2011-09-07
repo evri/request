@@ -10,6 +10,9 @@
 , "bugs" :
   { "web" : "http://github.com/mikeal/request/issues" }
 , "engines" : ["node >= 0.3.6"]
+,"dependencies": {
+    "compress-buffer" : "0.3.0"
+ }
 , "main" : "./main"
 , "scripts": { "test": "bash tests/run.sh" }
 }
