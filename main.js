@@ -1,11 +1,11 @@
 // Copyright 2010-2011 Mikeal Rogers
-// 
+//
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
-// 
+//
 //        http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,7 +52,7 @@ if (https && !https.Agent) {
 
 function isReadStream (rs) {
   if (rs.readable && rs.path && rs.mode) {
-    return true  
+    return true
   }
 }
 
@@ -70,11 +70,11 @@ function Request (options) {
   stream.Stream.call(this)
   this.readable = true
   this.writable = true
-  
+
   if (typeof options === 'string') {
     options = {uri:options}
   }
-  
+
   for (var i in options) {
     this[i] = options[i]
   }
@@ -89,7 +89,7 @@ Request.prototype.getAgent = function (host, port) {
   }
   return this.pool[host+':'+port]
 }
-Request.prototype.request = function () {  
+Request.prototype.request = function () {
   var options = this
   if (options.url) {
     // People use this property instead all the time so why not just support it.
@@ -109,7 +109,7 @@ Request.prototype.request = function () {
   options._redirectsFollowed = options._redirectsFollowed || 0
   options.maxRedirects = (options.maxRedirects !== undefined) ? options.maxRedirects : 10
   options.followRedirect = (options.followRedirect !== undefined) ? options.followRedirect : true
-  
+
   options.headers = options.headers ? copy(options.headers) : {}
 
   var setHost = false
@@ -133,7 +133,7 @@ Request.prototype.request = function () {
     console.error('options.bodyStream and options.responseBodyStream is deprecated. You should now send the request object to stream.pipe()')
     this.pipe(options.responseBodyStream || options.bodyStream)
   }
-  
+
   if (options.proxy) {
     options.port = options.proxy.port
     options.host = options.proxy.hostname
@@ -141,19 +141,19 @@ Request.prototype.request = function () {
     options.port = options.uri.port
     options.host = options.uri.hostname
   }
-  
+
   if (options.onResponse === true) {
     options.onResponse = options.callback
     delete options.callback
   }
-  
+
   var clientErrorHandler = function (error) {
     if (setHost) delete options.headers.host
     options.emit('error', error)
   }
-  if (options.onResponse) options.on('error', function (e) {options.onResponse(e)}) 
+  if (options.onResponse) options.on('error', function (e) {options.onResponse(e)})
   if (options.callback) options.on('error', function (e) {options.callback(e)})
-  
+
 
   if (options.uri.auth && !options.headers.authorization) {
     options.headers.authorization = "Basic " + toBase64(options.uri.auth.split(':').map(function(item){ return qs.unescape(item)}).join(':'))
@@ -174,17 +174,17 @@ Request.prototype.request = function () {
     } else {
       options.body = JSON.stringify(options.json)
     }
-    
+
   } else if (options.multipart) {
     options.body = ''
     options.headers['content-type'] = 'multipart/related;boundary="frontier"'
     if (!options.multipart.forEach) throw new Error('Argument error, options.multipart.')
-    
+
     options.multipart.forEach(function (part) {
       var body = part.body
       if(!body) throw Error('Body attribute missing in multipart.')
       delete part.body
-      options.body += '--frontier\r\n' 
+      options.body += '--frontier\r\n'
       Object.keys(part).forEach(function(key){
         options.body += key + ': ' + part[key] + '\r\n'
       })
@@ -203,12 +203,12 @@ Request.prototype.request = function () {
       throw new Error('Argument error, options.body.')
     }
   }
-  
-  options.httpModule = 
+
+  options.httpModule =
     {"http:":http, "https:":https}[options.proxy ? options.proxy.protocol : options.uri.protocol]
 
   if (!options.httpModule) throw new Error("Invalid protocol")
-  
+
   if (options.pool === false) {
     options.agent = false
   } else {
@@ -223,7 +223,7 @@ Request.prototype.request = function () {
       options.agent.maxSockets = options.pool.maxSockets
     }
   }
-  
+
   options.start = function () {
     options._started = true
     options.method = options.method || 'GET'
@@ -241,10 +241,10 @@ Request.prototype.request = function () {
       if (setHost) delete options.headers.host
       if (options.timeout && options.timeoutTimer) clearTimeout(options.timeoutTimer)
 
-      if (response.statusCode >= 300 && 
-          response.statusCode < 400  && 
-          options.followRedirect     && 
-          options.method !== 'PUT' && 
+      if (response.statusCode >= 300 &&
+          response.statusCode < 400  &&
+          options.followRedirect     &&
+          options.method !== 'PUT' &&
           options.method !== 'POST' &&
           response.headers.location) {
         if (options._redirectsFollowed >= options.maxRedirects) {
@@ -252,7 +252,7 @@ Request.prototype.request = function () {
           return
         }
         options._redirectsFollowed += 1
-        
+
         if (!isUrl.test(response.headers.location)) {
           response.headers.location = url.resolve(options.uri.href, response.headers.location)
         }
@@ -266,6 +266,10 @@ Request.prototype.request = function () {
         request(options, options.callback)
         return // Ignore the rest of the response
       } else {
+
+        // Evri.com modification to expose the redirected uri.
+        response.uri = options.uri && options.uri.href ? options.uri.href : options.uri;
+
         options._redirectsFollowed = 0
         // Be a good stream and emit end when the response is finished.
         // Hack to emit end on close because of a core bug that never fires end
@@ -287,7 +291,7 @@ Request.prototype.request = function () {
             if (response.headers['content-length']) {
               dest.headers['content-length'] = response.headers['content-length']
             }
-          } 
+          }
           if (dest.setHeader) {
             for (var i in response.headers) {
               dest.setHeader(i, response.headers[i])
@@ -299,7 +303,7 @@ Request.prototype.request = function () {
 
         response.on("data", function (chunk) {options.emit("data", chunk)})
         response.on("end", function (chunk) {
-          options._ended = true 
+          options._ended = true
           options.emit("end", chunk)
         })
         response.on("close", function () {options.emit("close")})
@@ -334,8 +338,8 @@ Request.prototype.request = function () {
                 response.body = JSON.parse(response.body)
               } catch (e) {}
             }
-            options.callback(null, response, response.body) 
-          })  
+            options.callback(null, response, response.body)
+          })
         }
       }
     })
@@ -350,8 +354,8 @@ Request.prototype.request = function () {
     }
 
     options.req.on('error', clientErrorHandler)
-  }  
-    
+  }
+
   options.once('pipe', function (src) {
     if (options.ntick) throw new Error("You cannot pipe to this stream after the first nextTick() after creation of the request stream.")
     options.src = src
@@ -370,12 +374,12 @@ Request.prototype.request = function () {
         options.method = src.method
       }
     }
-    
+
     options.on('pipe', function () {
       console.error("You have already piped to this stream. Pipeing twice is likely to break the request.")
     })
   })
-  
+
   process.nextTick(function () {
     if (options.body) {
       options.write(options.body)
