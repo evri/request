@@ -91,6 +91,11 @@ Request.prototype.getAgent = function (host, port) {
 }
 Request.prototype.request = function () {
   var options = this
+
+  // Set a default timeout if one wasn't specified.
+  if (!options.timeout)
+    options.timeout = 120000;  // 2 minutes
+
   if (options.url) {
     // People use this property instead all the time so why not just support it.
     options.uri = options.url
