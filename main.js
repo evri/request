@@ -153,6 +153,10 @@ Request.prototype.request = function () {
   }
 
   var clientErrorHandler = function (error) {
+    if (options.timeout && options.timeoutTimer) {
+      clearTimeout(options.timeoutTimer);
+      options.timeoutTimer = null;
+    }
     if (setHost) delete options.headers.host
     options.emit('error', error)
   }
