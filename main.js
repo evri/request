@@ -355,10 +355,11 @@ Request.prototype.request = function () {
 
     if (options.timeout) {
       options.timeoutTimer = setTimeout(function() {
-          options.req.abort()
-          var e = new Error("ETIMEDOUT")
-          e.code = "ETIMEDOUT"
-          options.emit("error", e)
+          options.req.abort();
+          var e = new Error("ETIMEDOUT");
+          e.code = "ETIMEDOUT";
+          e.path = options.uri.pathname;
+          options.emit("error", e);
       }, options.timeout)
     }
 
